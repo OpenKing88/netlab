@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "io.github.netlab.probe.compose"
+    namespace = "io.github.openking88.netlab.probe.compose"
     compileSdk = 36
 
     defaultConfig {
@@ -42,7 +42,7 @@ dependencies {
     compileOnly("androidx.compose.material3:material3")
 }
 
-group = "io.github.netlab"
+group = "io.github.openking88"
 version = "1.0"
 
 afterEvaluate {
@@ -50,7 +50,7 @@ afterEvaluate {
         publications {
             create<MavenPublication>("probe") {
                 artifact(tasks.named("bundleReleaseAar"))
-                groupId = "io.github.netlab"
+                groupId = "io.github.openking88.netlab"
                 artifactId = "compose-probe"
                 version = "1.0"
             }

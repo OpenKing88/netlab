@@ -6,7 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
 
-import io.github.netlab.DomainSwitch;
+import io.github.openking88.netlab.DomainSwitch;
 import okhttp3.Request;
 
 /** 运行时自检：打印实际生效的拦截器顺序，并走一次真实请求链路验证改写。 */

@@ -7,7 +7,7 @@ plugins {
     `maven-publish`
 }
 
-group = "io.github.netlab"
+group = "io.github.openking88"
 version = "3.0"
 
 java {
@@ -31,7 +31,7 @@ afterEvaluate {
         publications {
             create<MavenPublication>("probe") {
                 artifact(tasks.named("jar"))
-                groupId = "io.github.netlab"
+                groupId = "io.github.openking88.netlab"
                 artifactId = "kotlin-probe"
                 version = "3.0"
             }

@@ -8,7 +8,7 @@
 pluginManagement {
     // 本地验证形态：插件从源码引入。
     // 发布到 Maven 仓库后这一行可以删掉，改用
-    // plugins { id("io.github.netlab") version "1.0.0" }
+    // plugins { id("io.github.openking88.netlab") version "1.0.0" }
     includeBuild("../netlab/library/plugin")
     repositories {
         google()
@@ -32,7 +32,7 @@ dependencyResolutionManagement {
 plugins {
     id("com.android.application")
     // ...你原有的插件
-    id("io.github.netlab")          // ← 新增这一行
+    id("io.github.openking88.netlab")          // ← 新增这一行
 }
 
 domainSwitch {
@@ -57,7 +57,7 @@ domainSwitch {
 面板入口是通知栏常驻；通知被禁用时可以用 adb 拉起：
 
 ```bash
-adb shell am start -n <你的applicationId>/io.github.netlab.ui.DomainSwitchPanelActivity
+adb shell am start -n <你的applicationId>/io.github.openking88.netlab.ui.DomainSwitchPanelActivity
 ```
 
 ### 可用的配置项

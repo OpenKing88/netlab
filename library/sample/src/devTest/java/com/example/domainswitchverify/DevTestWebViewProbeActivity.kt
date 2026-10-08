@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import io.github.netlab.DomainSwitch
+import io.github.openking88.netlab.DomainSwitch
 
 private const val TAG = "DomainSwitchWebView"
 private const val H5_BASE = "h5.example.com"

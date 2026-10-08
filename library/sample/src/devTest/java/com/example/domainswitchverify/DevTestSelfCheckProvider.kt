@@ -6,8 +6,8 @@ import android.database.Cursor
 import android.net.Uri
 import android.util.Log
 import com.example.domainswitchverify.net.SampleNetwork
-import io.github.netlab.DomainSwitch
-import io.github.netlab.capture.CaptureStore
+import io.github.openking88.netlab.DomainSwitch
+import io.github.openking88.netlab.capture.CaptureStore
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 

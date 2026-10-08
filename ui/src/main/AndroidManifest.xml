@@ -6,17 +6,17 @@
 
     <application>
         <provider
-            android:name="io.github.netlab.ui.internal.DomainSwitchUiInitProvider"
+            android:name="io.github.openking88.netlab.ui.internal.DomainSwitchUiInitProvider"
             android:authorities="${applicationId}.domainswitch.ui.init"
             android:exported="false" />
 
         <!--
           exported=true 是为了通知被禁用时还能用 adb 打开：
-          adb shell am start -n <applicationId>/io.github.netlab.ui.DomainSwitchPanelActivity
+          adb shell am start -n <applicationId>/io.github.openking88.netlab.ui.DomainSwitchPanelActivity
           该模块只会进入非生产渠道，不构成线上暴露面。
         -->
         <activity
-            android:name="io.github.netlab.ui.DomainSwitchPanelActivity"
+            android:name="io.github.openking88.netlab.ui.DomainSwitchPanelActivity"
             android:excludeFromRecents="true"
             android:exported="true"
             android:label="@string/domain_switch_panel_title"

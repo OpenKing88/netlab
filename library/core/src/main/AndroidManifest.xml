@@ -7,7 +7,7 @@
           宿主删除依赖后该节点会随 manifest 合并结果一起消失，不留残余。
         -->
         <provider
-            android:name="io.github.netlab.internal.DomainSwitchInitProvider"
+            android:name="io.github.openking88.netlab.internal.DomainSwitchInitProvider"
             android:authorities="${applicationId}.domainswitch.init"
             android:exported="false" />
 

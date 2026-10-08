@@ -3,7 +3,7 @@ plugins {
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)
   // 零代码接入：宿主只写这一行插件，依赖与插桩都由插件按渠道处理
-  id("io.github.netlab")
+  id("io.github.openking88.netlab")
 }
 
 // 渠道白名单：只有 devTest / preProduct 会被插桩并注入运行时依赖，

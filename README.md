@@ -19,7 +19,7 @@
 这个库把两件事都做成"**加一行插件配置**"：
 
 ```kotlin
-plugins { id("io.github.netlab") }
+plugins { id("io.github.openking88.netlab") }
 
 domainSwitch {
     flavors.set(setOf("devTest", "preProduct"))   // 只有这两个渠道生效
@@ -34,9 +34,9 @@ domainSwitch {
 
 | 制品 | 内容 | 依赖 | 体积 |
 |---|---|---|---|
-| `io.github.netlab:netlab` | 核心：切换规则、抓包录制与存储、插桩目标 | **零运行时依赖**（纯 Java） | 31 KB |
-| `io.github.netlab:netlab-ui` | 可视化面板：域名切换页 + 抓包列表/详情 | 核心 + kotlin-stdlib（Compose 走 `compileOnly`） | 109 KB |
-| Gradle 插件 `io.github.netlab` | 按渠道加依赖 + 字节码插桩 | — | — |
+| `io.github.openking88:netlab` | 核心：切换规则、抓包录制与存储、插桩目标 | **零运行时依赖**（纯 Java） | 31 KB |
+| `io.github.openking88:netlab-ui` | 可视化面板：域名切换页 + 抓包列表/详情 | 核心 + kotlin-stdlib（Compose 走 `compileOnly`） | 109 KB |
+| Gradle 插件 `io.github.openking88.netlab` | 按渠道加依赖 + 字节码插桩 | — | — |
 
 ```
          ┌─────────────────────────────┐
@@ -96,7 +96,7 @@ dependencyResolutionManagement {
 plugins {
     id("com.android.application")
     // ...
-    id("io.github.netlab")
+    id("io.github.openking88.netlab")
 }
 ```
 
@@ -136,7 +136,7 @@ domainSwitch {
 通知栏点一下即可。通知被禁用时可以用 adb：
 
 ```bash
-adb shell am start -n <applicationId>/io.github.netlab.ui.DomainSwitchPanelActivity
+adb shell am start -n <applicationId>/io.github.openking88.netlab.ui.DomainSwitchPanelActivity
 ```
 
 ### 域名切换页
@@ -182,8 +182,8 @@ String rewritten = DomainSwitch.rewriteUrl("https://api.example.com/v1/user");
 | `maxBodyBytes` | `Int` | `524288` | 单条 body 捕获上限，超限只标记状态、不占内存 |
 | `includeUi` | `Boolean` | `true` | 是否带 Compose 面板；纯 View 宿主设为 `false` |
 | `autoAddDependency` | `Boolean` | `true` | 是否由插件自动补依赖 |
-| `runtimeDependency` | `String` | `io.github.netlab:netlab:0.6.1` | 核心制品坐标 |
-| `uiDependency` | `String` | `io.github.netlab:netlab-ui:0.9.6` | 面板制品坐标 |
+| `runtimeDependency` | `String` | `io.github.openking88:netlab:0.6.1` | 核心制品坐标 |
+| `uiDependency` | `String` | `io.github.openking88:netlab-ui:0.9.6` | 面板制品坐标 |
 
 ---
 

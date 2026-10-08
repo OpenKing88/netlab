@@ -5,10 +5,11 @@ import java.util.zip.ZipInputStream
 plugins {
     alias(libs.plugins.android.library)
     `maven-publish`
+    `signing`
 }
 
 android {
-    namespace = "io.github.netlab"
+    namespace = "io.github.openking88.netlab"
     compileSdk = 36
 
     defaultConfig {
@@ -42,8 +43,22 @@ dependencies {
 }
 
 // 本地验证用：发布到 mavenLocal，让插件能像消费真实制品一样自动注入依赖
-group = "io.github.netlab"
+group = "io.github.openking88"
 version = "1.0.0"
+
+// ─────────── Maven Central 发布支持 ───────────
+// 仓库地址与签名凭据一律从 gradle properties 读（本地 ~/.gradle/gradle.properties 或 CI 环境变量），
+// 绝不写进仓库。没配就只发 mavenLocal —— 本地验证不需要任何凭据。
+val netlabRepoUrl: String? = providers.gradleProperty("netlab.repo.url").orNull
+val netlabRepoUser: String? = providers.gradleProperty("netlab.repo.user").orNull
+val netlabRepoPassword: String? = providers.gradleProperty("netlab.repo.password").orNull
+val netlabSigningKey: String? = providers.gradleProperty("signingKey").orNull
+val netlabSigningPassword: String? = providers.gradleProperty("signingPassword").orNull
+
+// Central 强制要求 javadoc 制品，但 Android 库没有 javadoc 任务 —— 给一个空 jar 即可
+val netlabJavadocJar = tasks.register<Jar>("javadocJar") {
+    archiveClassifier.set("javadoc")
+}
 
 afterEvaluate {
     publishing {
@@ -56,10 +71,57 @@ afterEvaluate {
                 // "Module was compiled with an incompatible version of Kotlin"。
                 // 只发布 AAR 本体，不声明任何依赖，才是这个库的真实形态。
                 artifact(tasks.named("bundleReleaseAar"))
-                groupId = "io.github.netlab"
+                artifact(tasks.named("sourceReleaseJar")) { classifier = "sources" }
+                artifact(netlabJavadocJar)
+                groupId = "io.github.openking88"
                 artifactId = "netlab"
                 version = "1.0.0"
+                pom {
+                    name.set("netlab")
+                    description.set("零代码接入的 Android 网络调试库：动态域名切换 + 网络抓包")
+                    url.set("https://github.com/OpenKing88/netlab")
+                    licenses {
+                        license {
+                            name.set("The Apache License, Version 2.0")
+                            url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                        }
+                    }
+                    developers {
+                        developer {
+                            id.set("OpenKing88")
+                            name.set("OpenKing88")
+                            url.set("https://github.com/OpenKing88")
+                        }
+                    }
+                    scm {
+                        url.set("https://github.com/OpenKing88/netlab")
+                        connection.set("scm:git:git://github.com/OpenKing88/netlab.git")
+                        developerConnection.set("scm:git:ssh://git@github.com/OpenKing88/netlab.git")
+                    }
+                }
             }
+        }
+        repositories {
+            if (netlabRepoUrl != null) {
+                maven {
+                    name = "netlab"
+                    url = uri(netlabRepoUrl)
+                    // file 仓库不需要凭据；只有配了账号才加，否则 Gradle 会因为
+                    // username 未赋值而直接失败
+                    if (netlabRepoUser != null) {
+                        credentials {
+                            username = netlabRepoUser
+                            password = netlabRepoPassword
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (netlabSigningKey != null && netlabSigningPassword != null) {
+        signing {
+            useInMemoryPgpKeys(netlabSigningKey, netlabSigningPassword)
+            sign(publishing.publications)
         }
     }
 }

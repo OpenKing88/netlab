@@ -11,10 +11,11 @@ plugins {
     id("org.jetbrains.kotlin.android") version "2.0.21"
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.21"
     `maven-publish`
+    `signing`
 }
 
 android {
-    namespace = "io.github.netlab.ui"
+    namespace = "io.github.openking88.netlab.ui"
     compileSdk = 36
 
     defaultConfig {
@@ -29,6 +30,13 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // 让 release 组件带上 sources jar（Central 强制要求这个制品）
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
 kotlin {
@@ -39,7 +47,7 @@ kotlin {
 
 dependencies {
     // 依赖 core 的运行时 API（DomainSwitch / CaptureStore）
-    api("io.github.netlab:netlab:1.0.0")
+    api("io.github.openking88:netlab:1.0.0")
 
     // Compose 全部走 compileOnly：库只在编译期需要它，运行期由宿主自己的 Compose 提供。
     // 这样 POM 里不会出现 Compose，既不抬宿主的版本，也不会给纯 View 宿主塞进整套 Compose。
@@ -53,8 +61,19 @@ dependencies {
     compileOnly("androidx.activity:activity-compose:1.9.2")
 }
 
-group = "io.github.netlab"
+group = "io.github.openking88"
 version = "1.0.0"
+
+// ─────────── Maven Central 发布支持（与 core 同一套约定）───────────
+val netlabRepoUrl: String? = providers.gradleProperty("netlab.repo.url").orNull
+val netlabRepoUser: String? = providers.gradleProperty("netlab.repo.user").orNull
+val netlabRepoPassword: String? = providers.gradleProperty("netlab.repo.password").orNull
+val netlabSigningKey: String? = providers.gradleProperty("signingKey").orNull
+val netlabSigningPassword: String? = providers.gradleProperty("signingPassword").orNull
+
+val netlabJavadocJar = tasks.register<Jar>("javadocJar") {
+    archiveClassifier.set("javadoc")
+}
 
 afterEvaluate {
     publishing {
@@ -63,10 +82,54 @@ afterEvaluate {
                 // 与 core 不同，UI 模块确实有运行时依赖（core + kotlin-stdlib），
                 // 所以走组件发布把依赖声明出来；Compose 是 compileOnly，不会出现在这里。
                 from(components["release"])
-                groupId = "io.github.netlab"
+                artifact(netlabJavadocJar)
+                groupId = "io.github.openking88"
                 artifactId = "netlab-ui"
                 version = "1.0.0"
+                pom {
+                    name.set("netlab-ui")
+                    description.set("netlab 的可视化面板：域名切换 + 抓包列表与详情")
+                    url.set("https://github.com/OpenKing88/netlab")
+                    licenses {
+                        license {
+                            name.set("The Apache License, Version 2.0")
+                            url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                        }
+                    }
+                    developers {
+                        developer {
+                            id.set("OpenKing88")
+                            name.set("OpenKing88")
+                            url.set("https://github.com/OpenKing88")
+                        }
+                    }
+                    scm {
+                        url.set("https://github.com/OpenKing88/netlab")
+                        connection.set("scm:git:git://github.com/OpenKing88/netlab.git")
+                        developerConnection.set("scm:git:ssh://git@github.com/OpenKing88/netlab.git")
+                    }
+                }
             }
+        }
+        repositories {
+            if (netlabRepoUrl != null) {
+                maven {
+                    name = "netlab"
+                    url = uri(netlabRepoUrl)
+                    if (netlabRepoUser != null) {
+                        credentials {
+                            username = netlabRepoUser
+                            password = netlabRepoPassword
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (netlabSigningKey != null && netlabSigningPassword != null) {
+        signing {
+            useInMemoryPgpKeys(netlabSigningKey, netlabSigningPassword)
+            sign(publishing.publications)
         }
     }
 }

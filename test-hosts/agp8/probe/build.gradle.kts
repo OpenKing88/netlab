@@ -1,6 +1,6 @@
 plugins {
     id("com.android.application")
-    id("io.github.netlab")
+    id("io.github.openking88.netlab")
 }
 
 domainSwitch {

@@ -21,14 +21,14 @@
 |---|---|---|
 | 源码零侵入 | Gradle 插件 ASM 插桩，宿主不写 `addInterceptor`、不写初始化 | ✅ 宿主 `SampleNetwork` 里没有任何库相关代码，插桩后自动生效 |
 | 按渠道开关 | 插件在 `onVariants` 读 `variant.productFlavors`，白名单外直接跳过 | ✅ `devTest`/`preProduct` 插桩，`prodSample`（占位生产渠道）被跳过 |
-| 生产渠道零痕迹 | 白名单外既不插桩也不加依赖 | ✅ `prodSampleRelease` APK 中 `io/github/netlab` 符号数为 0，合并 manifest 中该库节点数为 0 |
+| 生产渠道零痕迹 | 白名单外既不插桩也不加依赖 | ✅ `prodSampleRelease` APK 中 `io/github/openking88/netlab` 符号数为 0，合并 manifest 中该库节点数为 0 |
 | 不污染宿主依赖 | 运行时的 okhttp 用 `compileOnly`，不写进 POM | ✅ 发布的 POM 中无 okhttp，宿主用自己的版本 |
 
 ## 二、模块划分
 
 ```
 domain-switch/                    被宿主持有的 Android Library（运行时）
-   io.github.netlab
+   io.github.openking88.netlab
      DomainSwitch                 对外 API：apply / clear / rules / rewrite
      DomainSwitchInterceptor      域名改写拦截器（application 层，必须 index 0）
      DomainSwitchTag              改写标记，供抓包工具展示"原域名 → 实际域名"
@@ -37,7 +37,7 @@ domain-switch/                    被宿主持有的 Android Library（运行时
      internal/DomainSwitchInitProvider   零代码初始化（唯一 manifest 足迹）
 
 build-logic/                      Gradle 插件（独立 included build）
-   io.github.netlab.plugin
+   io.github.openking88.netlab.plugin
      DomainSwitchPlugin           渠道判定 / 依赖注入 / 开启插桩
      DomainSwitchExtension        domainSwitch { flavors(...) } 配置项
      DomainSwitchClassVisitorFactory   AGP 插桩入口
@@ -52,7 +52,7 @@ build-logic/                      Gradle 插件（独立 included build）
 宿主构建脚本只需要：
 
 ```kotlin
-plugins { id("io.github.netlab") }
+plugins { id("io.github.openking88.netlab") }
 
 domainSwitch {
     flavors.set(setOf("devTest", "preProduct"))
@@ -164,7 +164,7 @@ DomainSwitch.setTarget("api.example.com", null);                   // 还原
 | 兜底入口 | `exported=true`，可用 adb 直接拉起（通知被禁用时仍然能用） |
 
 ```bash
-adb shell am start -n <applicationId>/io.github.netlab.ui.DomainSwitchPanelActivity
+adb shell am start -n <applicationId>/io.github.openking88.netlab.ui.DomainSwitchPanelActivity
 ```
 
 面板结构：每个「基线域名」一行，显示当前指向；点击弹出选择器，选项 =
@@ -313,10 +313,10 @@ network interceptor 在 `ConnectInterceptor` 之后执行，连接目标已经�
 
 ## 七、移除即还原的验收清单
 
-1. 删掉 `plugins { id("io.github.netlab") }` 与 `domainSwitch { }`；
+1. 删掉 `plugins { id("io.github.openking88.netlab") }` 与 `domainSwitch { }`；
 2. `./gradlew :app:assemble<Flavor>` 应恢复原样；
 3. 校验三项零残留：
-   - APK dex 中 `io/github/netlab` 符号数为 0；
+   - APK dex 中 `io/github/openking88/netlab` 符号数为 0；
    - 合并后的 manifest 中无该库的 provider；
    - 宿主源码从未出现过任何库相关引用（本次设计中天然满足）。
 
@@ -404,7 +404,7 @@ Kotlin 2.0.21 的宿主项目，直接把宿主编译打挂。
 修复后的 POM：
 
 ```xml
-<groupId>io.github.netlab</groupId>
+<groupId>io.github.openking88.netlab</groupId>
 <artifactId>domain-switch</artifactId>
 <version>0.4.0</version>
 <packaging>aar</packaging>
@@ -419,7 +419,7 @@ Compose 可行性已经单独实测过：库编译在 Kotlin 2.0.21 + Compose �
 阶段 1 落地的是"录制 + 存储"，纯 Java、无 UI：
 
 ```
-io.github.netlab.capture
+io.github.openking88.netlab.capture
   CaptureRecord       一条记录（可变 DTO，Kotlin 侧直接读字段）
   CapturedBytes       抢下来的原始字节 + 状态
   CaptureSnapshot     一次请求的原始素材（只装字节，不装解码结果）
@@ -533,7 +533,7 @@ Modifier.weight(1f, fill = true)
 
 ```
 发现 Compose 接口作用域的默认参数桥接调用，这在较老的 Compose 宿主上会 NoSuchMethodError。
-  io.github.netlab.ui.capture.CaptureListScreenKt → invokestatic
+  io.github.openking88.netlab.ui.capture.CaptureListScreenKt → invokestatic
   RowScope.weight$default:(...)
 ```
 
@@ -644,7 +644,7 @@ Execution failed for task ':app:mergeExtDexDevTestDebug'
 
 渠道产物对比：
 
-| 渠道 | dex 中 `io/github/netlab` 符号 | 合并 manifest | 插桩 |
+| 渠道 | dex 中 `io/github/openking88/netlab` 符号 | 合并 manifest | 插桩 |
 |---|---|---|---|
 | devTestDebug | 8 个类全部存在 | 含 `DomainSwitchInitProvider` | 有 |
 | prodSampleRelease | 0 | 无 | 无 |
