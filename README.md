@@ -100,6 +100,9 @@ plugins {
 }
 ```
 
+发布到 Maven Central 后，也可以写成带版本号的形式
+`id("io.github.openking88.netlab") version "1.0.0"`（见 `docs/publishing.md`）。
+
 ### 3. 配置渠道白名单
 
 ```kotlin
@@ -296,7 +299,11 @@ netlab/
 ├── test-hosts/
 │   └── agp8/           AGP 8.13.2 宿主验证 + Kotlin/Compose 兼容性探针
 ├── integration/      ← 宿主接入补丁（本地验证形态）
-└── docs/             ← 设计与验证档案
+├── docs/             ← 设计与发布档案
+│   ├── clean-architecture.md   设计与验证记录
+│   └── publishing.md           发布到 Maven Central 的流程
+├── LICENSE
+└── CHANGELOG.md
 ```
 
 **为什么 `ui` 是独立构建**：UI 模块必须编译在 Kotlin 2.0.21 上（这是我们要支持的宿主最低
@@ -312,9 +319,18 @@ AGP 9 + Kotlin 2.3 上。两个工具链没法合并成一个 Gradle 构建，�
 make check         # core + ui 的全部检查
 make check-hosts   # AGP 8.13.2 宿主验证工程
 make publish       # 把 core 与 ui 发布到 mavenLocal（供宿主验证）
+make bundle        # 构建 Maven Central 上传用的 bundle zip（需签名凭据）
 ```
 
 > `ui/` 与 `test-hosts/agp8/` 跑 Gradle 8.13，**不支持 JDK 25**，必须用 JDK 21 ——
 > Makefile 里已经处理好了（`JAVA21` 变量，可用环境变量或命令行覆盖）。
 
 想了解"为什么这么设计"，看 `docs/clean-architecture.md`。
+想发布新版本，看 `docs/publishing.md`。
+
+---
+
+## License
+
+Apache License 2.0，见 [`LICENSE`](LICENSE)。
+版本变更记录见 [`CHANGELOG.md`](CHANGELOG.md)。
