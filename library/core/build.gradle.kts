@@ -58,6 +58,7 @@ val netlabSigningPassword: String? = providers.gradleProperty("signingPassword")
 // Central 强制要求 javadoc 制品，但 Android 库没有 javadoc 任务 —— 给一个空 jar 即可
 val netlabJavadocJar = tasks.register<Jar>("javadocJar") {
     archiveClassifier.set("javadoc")
+    archiveBaseName.set("netlab")
 }
 
 afterEvaluate {

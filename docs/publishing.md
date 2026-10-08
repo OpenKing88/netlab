@@ -46,14 +46,45 @@
 
 Central **强制要求每个制品都有 `.asc` 签名**，没有签名在上传校验阶段就会被拒。
 
+**好消息：签名不需要系统装 gpg。** 签名是 Gradle 在自己的进程里用内存密钥完成的
+（`useInMemoryPgpKeys`），gpg 只在两件事上有用：生成密钥、把公钥发到 keyserver。
+而 gpg 在某些机器上根本装不上 —— 本机就是这种情况，Homebrew 直接拒绝：
+
+```
+Error: unknown or unsupported macOS version: :dunno
+```
+
+所以仓库自带了一个工具，用 BouncyCastle 现场生成密钥：
+
+```bash
+./tools/gen-signing-key.sh                     # 默认 UID 与输出目录
+./tools/gen-signing-key.sh "Name <mail@host>"  # 自定义 UID
+```
+
+它会在 `~/.gradle/netlab-signing/` 下生成 `signing.key` / `signing.password` / `public.asc`
+（权限 600），并打印把公钥发到 keyserver 的现成命令。
+
+**如果本机有 gpg**，用官方那套也行，效果等价：
+
 ```bash
 gpg --gen-key                                              # 建议 RSA 4096，设置口令
 gpg --keyserver keyserver.ubuntu.com --send-keys <KEY_ID>  # 公钥必须分发出去
 gpg --export-secret-keys --armor <KEY_ID>                  # 输出为 ASCII-armored 私钥
 ```
 
-私钥用于 `signingKey`，口令用于 `signingPassword`。公钥一定要发到 keyserver，
-否则校验阶段会报 "Invalid signature ... public key not found"。
+不管用哪条路，**公钥一定要发到 keyserver**，否则校验阶段会报
+"Invalid signature ... public key not found"：
+
+```bash
+curl -sS -X POST --data-urlencode "keytext=$(cat ~/.gradle/netlab-signing/public.asc)" \
+  https://keyserver.ubuntu.com/pks/add
+```
+
+回查（用**完整指纹**，短 ID 在集群各节点上同步有延迟）：
+
+```bash
+curl -sS "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x<完整指纹>" | head -3
+```
 
 ### 1.3 生成上传用的 user token
 
@@ -62,22 +93,30 @@ gpg --export-secret-keys --armor <KEY_ID>                  # 输出为 ASCII-arm
 > ⚠️ **这是账号密码的等价物，等同于明文口令**。用完就 revoke 重新生成一份，
 > 不要贴进任何聊天记录、issue、CI 日志。
 
-### 1.4 把凭据写进 `~/.gradle/gradle.properties`
+### 1.4 把凭据放到仓库外的专用目录
 
-**只写本机，不进仓库**（仓库 `.gitignore` 已经把 `signing.properties` 之类排除掉了）：
+凭据放在**仓库外的专用目录** `~/.gradle/netlab-signing/`（`NETLAB_SECRETS`，可覆盖）：
 
-```properties
-signingKey=<1.2 导出的 ASCII-armored 私钥，整段贴进来>
-signingPassword=<密钥口令>
-netlab.repo.user=<1.3 的 username>
-netlab.repo.password=<1.3 的 password>
+| 文件 | 内容 | 来源 |
+|---|---|---|
+| `signing.key` | PGP 私钥（ASCII-armored） | 1.2 |
+| `signing.password` | 私钥口令 | 1.2 |
+| `portal.user` | Central user token 用户名 | 1.3 |
+| `portal.password` | Central user token 密码 | 1.3 |
+
+```bash
+printf '%s' '<1.3 的 username>' > ~/.gradle/netlab-signing/portal.user
+printf '%s' '<1.3 的 password>' > ~/.gradle/netlab-signing/portal.password
+chmod 600 ~/.gradle/netlab-signing/portal.*
 ```
 
-`netlab.repo.url` **不要**写在这里 —— 构建 bundle 时用命令行传本地目录，
-上传走 API，不需要把某个远端仓库地址固化进配置。
+> **为什么不写全局 `~/.gradle/gradle.properties`**：那个文件是所有项目共用的，
+> 往里塞 `signingKey` / `signingPassword` 会和其他项目的同名属性互相覆盖。
+> Makefile 在调用 Gradle 时用 `ORG_GRADLE_PROJECT_*` 环境变量注入，作用域只限这次构建。
+> 三个构建（`library/core`、`ui`、`library/plugin`）都会读到同一份凭据；
+> 没配就只发 `mavenLocal`，本地验证不受影响。
 
-三个构建（`library/core`、`ui`、`library/plugin`）读的是同一组属性名，
-配一次三处都生效；没配就只发 `mavenLocal`，本地验证不受影响。
+`netlab.repo.url` 不需要配置 —— 构建 bundle 时用命令行传本地目录，上传走 API。
 
 ---
 
@@ -87,13 +126,17 @@ netlab.repo.password=<1.3 的 password>
 make bundle
 ```
 
+没有配签名凭据时会**直接报错退出**（`make check-secrets`），
+不会产出"看着正常、上传才发现没有 `.asc`"的包。
+
 它做的事，拆开就是三条命令（三块制品分别发到同一个本地文件型仓库）：
 
 ```bash
 REPO=$PWD/build/central-bundle
-(cd library && ./gradlew :core:publish -Pnetlab.repo.url="file://$REPO")
-(cd ui      && ./gradlew -Dorg.gradle.java.home=$JAVA21 publish -Pnetlab.repo.url="file://$REPO")
-(cd library && ./gradlew -p plugin publish -Pnetlab.repo.url="file://$REPO")
+(cd library && ORG_GRADLE_PROJECT_signingKey="$(cat ~/.gradle/netlab-signing/signing.key)" \
+                ORG_GRADLE_PROJECT_signingPassword="$(cat ~/.gradle/netlab-signing/signing.password)" \
+                ./gradlew :core:publish -Pnetlab.repo.url="file://$REPO")
+# ui 与 plugin 同理，ui 还要带上 -Dorg.gradle.java.home=$JAVA21
 (cd "$REPO" && zip -qr ../netlab-central-bundle.zip . -x 'maven-metadata.xml*' -x '*/maven-metadata.xml*')
 ```
 
@@ -116,7 +159,18 @@ Central 自己维护元数据，官方示例 bundle 里也没有它。
 `.sha256` / `.sha512` 属于"支持但不强制"，本地构建会一并生成，留着无害。
 `.asc` 不用配校验文件，校验文件也不需要 `.asc`。
 
-上传前自查签名齐不齐：
+打包前有一道**签名完整性门禁**：bundle 目录里每个制品都必须有同名 `.asc`，
+缺一个就直接失败（Central 会因为一个缺签名而整体拒掉，本地先拦住更省事）。
+成功后输出的 `.asc` 文件数应为 **15**：
+
+| 坐标 | 制品 |
+|---|---|
+| `netlab` | aar / pom / sources / javadoc |
+| `netlab-ui` | aar / pom / sources / javadoc / module |
+| `netlab-gradle-plugin` | jar / pom / sources / javadoc / module |
+| `io.github.openking88.netlab.gradle.plugin`（marker） | pom |
+
+想单独复核也可以：
 
 ```bash
 unzip -l build/netlab-central-bundle.zip | grep -c '\.asc$'
@@ -127,12 +181,15 @@ unzip -l build/netlab-central-bundle.zip | grep -c '\.asc$'
 ## 3. 上传
 
 ```bash
-# 从 ~/.gradle/gradle.properties 读，别把 token 敲进命令行历史。
-# tr -d '\n' 不能省：GNU 版 base64 默认每 76 字符换行，Base64 里混进换行会让认证头直接失效。
-GP=~/.gradle/gradle.properties
-NETLAB_USER=$(grep -m1 '^netlab.repo.user=' "$GP" | cut -d= -f2-)
-NETLAB_PASS=$(grep -m1 '^netlab.repo.password=' "$GP" | cut -d= -f2-)
-TOKEN=$(printf '%s:%s' "$NETLAB_USER" "$NETLAB_PASS" | base64 | tr -d '\n')
+make upload                                   # USER_MANAGED（默认）：只校验，人工放行
+make upload PUBLISHING_TYPE=AUTOMATIC         # 校验通过即发布
+```
+
+等价的手工 curl（token 从凭据目录读，别敲进命令行历史）：
+
+```bash
+TOKEN=$(printf '%s:%s' "$(cat ~/.gradle/netlab-signing/portal.user)" \
+                       "$(cat ~/.gradle/netlab-signing/portal.password)" | base64 | tr -d '\n')
 
 curl --request POST \
   --url 'https://central.sonatype.com/api/v1/publisher/upload?name=netlab-1.0.0&publishingType=USER_MANAGED' \
@@ -160,12 +217,10 @@ curl --request POST \
 ## 4. 查询部署状态
 
 ```bash
-curl --request POST \
-  --url "https://central.sonatype.com/api/v1/publisher/status?id=<deploymentId>" \
-  --header "Authorization: Bearer $TOKEN" | jq
+make status DEPLOYMENT=<deploymentId>
 ```
 
-注意是 **POST**，不是 GET。
+底层是 `POST /api/v1/publisher/status?id=<deploymentId>` —— **注意是 POST，不是 GET**。
 
 状态流转：`PENDING` → `VALIDATING` → `VALIDATED` → `PUBLISHING` → `PUBLISHED`；
 任一步失败会变 `FAILED`，并在 Portal 的 Deployments 页给出具体原因。
@@ -174,14 +229,12 @@ curl --request POST \
 ### 放行 / 丢弃
 
 ```bash
-# 放行（USER_MANAGED 且已到 VALIDATED）→ 204
-curl --request POST   --url "https://central.sonatype.com/api/v1/publisher/deployment/<deploymentId>" \
-  --header "Authorization: Bearer $TOKEN"
-
-# 丢弃（VALIDATED 或 FAILED 状态下可用）
-curl --request DELETE --url "https://central.sonatype.com/api/v1/publisher/deployment/<deploymentId>" \
-  --header "Authorization: Bearer $TOKEN"
+make central-publish DEPLOYMENT=<deploymentId>   # 放行 → 204
+make central-drop    DEPLOYMENT=<deploymentId>   # 丢弃（VALIDATED / FAILED 可用）
 ```
+
+⚠️ **`central-publish` 不可撤销**：放行后制品进入 Maven Central，
+同坐标同版本既不能覆盖也不能删除。首发务必先在 `VALIDATED` 状态做完下面这步自测。
 
 ### 先发布前自测
 
@@ -247,7 +300,10 @@ plugins { id("io.github.openking88.netlab") version "1.0.0" }
    `library/plugin/build.gradle.kts`（以及插件 DSL 里指向 `netlab` / `netlab-ui` 的默认版本约定）。
 2. 在 `CHANGELOG.md` 顶部的「未发布」下补这一版的内容，并把 `[未发布]` 的比较链接指到新 tag。
 3. 打 tag 并推：`git tag vX.Y.Z && git push origin vX.Y.Z`。
-4. 重跑 `make bundle` → 上传。
+4. `make bundle VERSION=X.Y.Z` → `make upload VERSION=X.Y.Z` → 校验通过后
+   `make central-publish DEPLOYMENT=<id>`。
+
+签名密钥不用换，除非它泄露或过期 —— 同一把密钥可以一直签后续版本。
 
 ---
 

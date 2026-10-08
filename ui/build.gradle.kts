@@ -73,6 +73,7 @@ val netlabSigningPassword: String? = providers.gradleProperty("signingPassword")
 
 val netlabJavadocJar = tasks.register<Jar>("javadocJar") {
     archiveClassifier.set("javadoc")
+    archiveBaseName.set("netlab-ui")
 }
 
 afterEvaluate {

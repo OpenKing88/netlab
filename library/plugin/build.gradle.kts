@@ -49,6 +49,8 @@ val netlabSigningPassword: String? = providers.gradleProperty("signingPassword")
 
 val netlabJavadocJar = tasks.register<Jar>("javadocJar") {
     archiveClassifier.set("javadoc")
+    // 默认取项目名（这里是 build-logic），产物文件名和坐标对不上
+    archiveBaseName.set("netlab-gradle-plugin")
 }
 
 // java-gradle-plugin 会为「插件本体」和「plugin marker」各创建一个 publication。
@@ -59,8 +61,15 @@ publishing {
         // 改成 netlab-gradle-plugin；marker 制品会跟着指向新坐标。
         if (name == "pluginMaven") {
             artifactId = "netlab-gradle-plugin"
+            // javadoc 制品只挂给插件本体。
+            //
+            // 两个 publication 共用同一个 jar 文件时，两个 Sign 任务会往同一个 .asc
+            // 路径写，Gradle 会以 "uses this output of task X without declaring an
+            // explicit or implicit dependency" 直接判失败（真踩到过）。
+            // marker 是 packaging=pom 的坐标转发件，Central 的"非 pom 制品必须提供
+            // sources/javadoc"要求不适用于它，不挂也不会被拒。
+            artifact(netlabJavadocJar)
         }
-        artifact(netlabJavadocJar)
         pom {
             name.set(artifactId)
             description.set("netlab 的 Gradle 插件：按渠道注入依赖并插桩 OkHttp / WebView 的调用点")

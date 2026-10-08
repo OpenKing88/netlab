@@ -299,6 +299,7 @@ netlab/
 ├── test-hosts/
 │   └── agp8/           AGP 8.13.2 宿主验证 + Kotlin/Compose 兼容性探针
 ├── integration/      ← 宿主接入补丁（本地验证形态）
+├── tools/            ← 发布辅助：不依赖 gpg 的签名密钥生成器
 ├── docs/             ← 设计与发布档案
 │   ├── clean-architecture.md   设计与验证记录
 │   └── publishing.md           发布到 Maven Central 的流程
@@ -320,6 +321,7 @@ make check         # core + ui 的全部检查
 make check-hosts   # AGP 8.13.2 宿主验证工程
 make publish       # 把 core 与 ui 发布到 mavenLocal（供宿主验证）
 make bundle        # 构建 Maven Central 上传用的 bundle zip（需签名凭据）
+make upload        # 把 bundle 传给 Central Portal（需 user token）
 ```
 
 > `ui/` 与 `test-hosts/agp8/` 跑 Gradle 8.13，**不支持 JDK 25**，必须用 JDK 21 ——
