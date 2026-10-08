@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="domain_switch_panel_title">域名切换</string>
+    <string name="domain_switch_channel_name">Domain Switch</string>
+    <string name="domain_switch_channel_description">域名切换与抓包入口</string>
+    <string name="domain_switch_notification_title">最近请求</string>
+    <string name="domain_switch_notification_text">还没有抓到请求，点此打开面板</string>
+</resources>

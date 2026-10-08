@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 通知栏入口需要；API 33 起为运行时权限，未授权时通知静默跳过 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application>
+        <provider
+            android:name="io.github.netlab.ui.internal.DomainSwitchUiInitProvider"
+            android:authorities="${applicationId}.domainswitch.ui.init"
+            android:exported="false" />
+
+        <!--
+          exported=true 是为了通知被禁用时还能用 adb 打开：
+          adb shell am start -n <applicationId>/io.github.netlab.ui.DomainSwitchPanelActivity
+          该模块只会进入非生产渠道，不构成线上暴露面。
+        -->
+        <activity
+            android:name="io.github.netlab.ui.DomainSwitchPanelActivity"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/domain_switch_panel_title"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+    </application>
+
+</manifest>

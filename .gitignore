@@ -1,0 +1,37 @@
+# ─────────── Gradle ───────────
+.gradle/
+build/
+# wrapper 的 jar 要入库，其余 wrapper 产物忽略
+!gradle/wrapper/gradle-wrapper.jar
+
+# ─────────── Android ───────────
+local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+captures/
+.cxx/
+.externalNativeBuild/
+
+# ─────────── IDE ───────────
+.idea/
+*.iml
+.kotlin/
+
+# ─────────── 系统 ───────────
+.DS_Store
+Thumbs.db
+
+# ─────────── 凭据（严禁入库）───────────
+# 签名文件与本地凭据：这类文件一旦推到公开仓库就无法收回
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+secrets.properties
+
+# ─────────── 本地验证产物 ───────────
+# mavenLocal 的发布产物、临时仓库等
+.maven-local/
+*.log

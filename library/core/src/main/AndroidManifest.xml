@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!--
+          唯一的一处 manifest 足迹：宿主零代码初始化的入口。
+          宿主删除依赖后该节点会随 manifest 合并结果一起消失，不留残余。
+        -->
+        <provider
+            android:name="io.github.netlab.internal.DomainSwitchInitProvider"
+            android:authorities="${applicationId}.domainswitch.init"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

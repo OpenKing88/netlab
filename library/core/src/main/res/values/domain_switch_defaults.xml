@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      默认空值。Gradle 插件会用宿主该渠道 buildConfigField 里识别出的域名覆盖同名资源；
+      没有装插件时就是空清单，不会导致资源或 manifest 合并失败。
+    -->
+    <string name="domain_switch_hosts" translatable="false"></string>
+
+    <!-- 以下三项由 Gradle 插件的 domainSwitch { } 按渠道覆盖 -->
+    <string name="domain_switch_capture_enabled" translatable="false">true</string>
+    <string name="domain_switch_max_records" translatable="false">500</string>
+    <string name="domain_switch_max_body_bytes" translatable="false">524288</string>
+
+    <!-- 由插件从源码注释提取，格式：接口全名#方法名=说明（多条用换行分隔） -->
+    <string name="domain_switch_api_descriptions" translatable="false"></string>
+</resources>

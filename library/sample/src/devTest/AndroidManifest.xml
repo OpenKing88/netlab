@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application>
+        <!--
+          验证代码只存在于 devTest 渠道的 source set：
+          主代码（src/main）完全不引用域名切换库的 API，
+          所以生产渠道既不需要 no-op 包，也不会有任何编译期引用。
+        -->
+        <provider
+            android:name="com.example.domainswitchverify.DevTestSelfCheckProvider"
+            android:authorities="${applicationId}.devtest.selfcheck"
+            android:exported="false" />
+
+        <!-- WebView 链路探针，用 adb 手动拉起 -->
+        <activity
+            android:name="com.example.domainswitchverify.DevTestWebViewProbeActivity"
+            android:exported="true"
+            android:label="WebView 探针" />
+    </application>
+
+</manifest>

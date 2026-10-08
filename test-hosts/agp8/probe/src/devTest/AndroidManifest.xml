@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- 自检只存在于 devTest 渠道；宿主主代码不引用本库任何 API -->
+        <provider
+            android:name="com.example.probe.ProbeSelfCheckProvider"
+            android:authorities="${applicationId}.probe.selfcheck"
+            android:exported="false" />
+    </application>
+
+</manifest>
