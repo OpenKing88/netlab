@@ -73,8 +73,6 @@ domainSwitch {
 ```kotlin
 pluginManagement {
     repositories {
-        // 正式形态：换成你们的私有 Maven 或内部发布源
-        mavenLocal()
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -83,12 +81,14 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        mavenLocal()      // 同上
         google()
         mavenCentral()
     }
 }
 ```
+
+已发布到 Maven Central，`mavenCentral()` 就够了。想在本地改库源码联调时，
+再往这两处各加一个 `mavenLocal()` / `includeBuild(".../library/plugin")`。
 
 ### 2. app 模块应用插件
 
@@ -96,12 +96,12 @@ dependencyResolutionManagement {
 plugins {
     id("com.android.application")
     // ...
-    id("io.github.openking88.netlab")
+    id("io.github.openking88.netlab") version "1.0.0"
 }
 ```
 
-发布到 Maven Central 后，也可以写成带版本号的形式
-`id("io.github.openking88.netlab") version "1.0.0"`（见 `docs/publishing.md`）。
+版本号必须写 —— 插件走的是标准的 plugin marker 解析
+（`io.github.openking88.netlab:io.github.openking88.netlab.gradle.plugin`）。
 
 ### 3. 配置渠道白名单
 
@@ -185,8 +185,8 @@ String rewritten = DomainSwitch.rewriteUrl("https://api.example.com/v1/user");
 | `maxBodyBytes` | `Int` | `524288` | 单条 body 捕获上限，超限只标记状态、不占内存 |
 | `includeUi` | `Boolean` | `true` | 是否带 Compose 面板；纯 View 宿主设为 `false` |
 | `autoAddDependency` | `Boolean` | `true` | 是否由插件自动补依赖 |
-| `runtimeDependency` | `String` | `io.github.openking88:netlab:0.6.1` | 核心制品坐标 |
-| `uiDependency` | `String` | `io.github.openking88:netlab-ui:0.9.6` | 面板制品坐标 |
+| `runtimeDependency` | `String` | `io.github.openking88:netlab:1.0.0` | 核心制品坐标 |
+| `uiDependency` | `String` | `io.github.openking88:netlab-ui:1.0.0` | 面板制品坐标 |
 
 ---
 
