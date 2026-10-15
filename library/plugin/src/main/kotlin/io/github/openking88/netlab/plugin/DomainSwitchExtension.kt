@@ -25,7 +25,7 @@ abstract class DomainSwitchExtension @Inject constructor(objects: ObjectFactory)
      * 宿主因此不需要手写任何 dependencies。
      */
     val runtimeDependency: Property<String> = objects.property(String::class.java)
-        .convention("io.github.openking88:netlab:1.0.1")
+        .convention("io.github.openking88:netlab:1.0.2")
 
     /** 是否由插件自动补充运行时依赖。关掉后需要宿主自己按渠道声明依赖。 */
     val autoAddDependency: Property<Boolean> = objects.property(Boolean::class.java)
@@ -42,7 +42,7 @@ abstract class DomainSwitchExtension @Inject constructor(objects: ObjectFactory)
 
     /** 面板制品坐标。 */
     val uiDependency: Property<String> = objects.property(String::class.java)
-        .convention("io.github.openking88:netlab-ui:1.0.1")
+        .convention("io.github.openking88:netlab-ui:1.0.2")
 
     /** 是否录制网络请求。关掉后抓包拦截器直接放行，零开销。 */
     val capture: Property<Boolean> = objects.property(Boolean::class.java)

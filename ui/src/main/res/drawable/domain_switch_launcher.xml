@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  桌面兜底入口的图标（不是通知栏那个）。
+
+  ⚠️ 不能直接复用 domain_switch_icon：那是通知栏小图标，是**白色单色**矢量，
+  当桌面图标会被系统放在浅色底上 → 白底白字，看起来是个空白方块（真机实测到的）。
+  所以这里自带一块有颜色的底，保证在任意桌面主题下都能看清。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 底色 -->
+    <path
+        android:fillColor="#2F6BFF"
+        android:pathData="M0,0h108v108h-108z" />
+
+    <!-- 复用通知栏那个地球仪形状，缩到安全区（72x72）居中 -->
+    <group
+        android:scaleX="3"
+        android:scaleY="3"
+        android:translateX="18"
+        android:translateY="18">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M12,2a10,10 0 1,0 0,20a10,10 0 0,0 0,-20zM12,4c1.5,1.8 2.4,4.1 2.7,6.5H9.3C9.6,8.1 10.5,5.8 12,4zM4.3,10.5h2c0.1,0.6 0.3,1.2 0.5,1.8c-0.4,0.5 -0.8,1 -1.1,1.6C5,13.9 4.5,12.3 4.3,10.5zM4.3,13.5h2c0.2,1.8 0.7,3.4 1.4,4.9c-0.3,0.6 -0.7,1.1 -1.1,1.6C5,18.9 4.5,16.3 4.3,13.5zM9.3,13.5h5.4c-0.3,2.4 -1.2,4.7 -2.7,6.5C10.5,18.2 9.6,15.9 9.3,13.5zM17.7,10.5h2c-0.2,1.8 -0.7,3.4 -1.4,4.9c-0.3,-0.6 -0.7,-1.1 -1.1,-1.6C17.4,13.2 17.6,11.9 17.7,10.5zM17.7,13.5c-0.1,1.4 -0.3,2.7 -0.5,3.9c0.4,0.5 0.8,1 1.1,1.6C19,17.5 19.5,15.9 19.7,13.5z" />
+    </group>
+</vector>

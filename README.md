@@ -154,6 +154,10 @@ adb shell am start -n <applicationId>/io.github.openking88.netlab.ui.DomainSwitc
 > 桌面兜底入口的图标与名称取自库的默认值（`domain_switch_icon` / `domain_switch_launcher_label`），
 > 宿主可以在自己的 `res/` 里用同名资源覆盖。
 
+> **纯 View 宿主**（没接 `androidx.activity` / Compose）不用担心：面板类加载不了时，
+> UI 模块会整体静默退出 —— 不崩宿主、不发通知、不露桌面入口。
+> 想让依赖也彻底干净，仍然建议显式关掉：`domainSwitch { includeUi.set(false) }`
+
 ### 域名切换页
 
 按链路分组展示，避免误导：

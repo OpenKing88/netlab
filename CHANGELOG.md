@@ -5,6 +5,29 @@
 
 ## [未发布]
 
+## [1.0.2] - 2026-10-15
+
+### 修复
+
+- **纯 View 宿主不再被连累启动崩溃**。
+  面板 Activity 继承宿主的 `androidx.activity.ComponentActivity`，而本库对 Compose / activity
+  都是 `compileOnly`。宿主没接这些依赖时，加载面板类会抛 `NoClassDefFoundError`，而且这一步发生在
+  **ContentProvider 创建阶段（进程启动期）** —— 现场表现是"接上库以后 App 一启动就崩"，
+  比"没有入口"糟得多。
+
+  现在 UI 模块启动时先探一次面板可用性：不可用就整个模块静默退出 —— 不崩宿主、不发通知、
+  不露桌面入口，并顺手收掉可能在旧版本里残留的桌面入口（组件状态是持久化的）。
+
+  > 正确用法仍然是纯 View 宿主显式关闭面板：`domainSwitch { includeUi.set(false) }`
+
+- **桌面兜底入口的图标不再是一块白板**。原来复用了通知栏的小图标（白色单色矢量），
+  放到浅色桌面背景上等于白底白字；现在换成自带底色的专用图标。
+
+### 说明
+
+1.0.1 的桌面兜底入口只判断了「通知是否可用」；1.0.2 补上「面板本身是否起得来」，
+两者合起来保证任何情况下都不会出现"点了就崩"的入口。
+
 ## [1.0.1] - 2026-10-15
 
 ### 修复
@@ -68,6 +91,7 @@
 - 生产渠道不支持（这正是设计前提）。
 - 切换 WebView 域名可能影响登录态。
 
-[未发布]: https://github.com/OpenKing88/netlab/compare/v1.0.1...HEAD
+[未发布]: https://github.com/OpenKing88/netlab/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/OpenKing88/netlab/releases/tag/v1.0.2
 [1.0.1]: https://github.com/OpenKing88/netlab/releases/tag/v1.0.1
 [1.0.0]: https://github.com/OpenKing88/netlab/releases/tag/v1.0.0

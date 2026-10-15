@@ -37,7 +37,7 @@
             android:name="io.github.openking88.netlab.ui.DomainSwitchLauncherAlias"
             android:enabled="false"
             android:exported="true"
-            android:icon="@drawable/domain_switch_icon"
+            android:icon="@drawable/domain_switch_launcher"
             android:label="@string/domain_switch_launcher_label"
             android:targetActivity="io.github.openking88.netlab.ui.DomainSwitchPanelActivity">
             <intent-filter>

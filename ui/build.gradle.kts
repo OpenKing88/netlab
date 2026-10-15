@@ -47,7 +47,7 @@ kotlin {
 
 dependencies {
     // 依赖 core 的运行时 API（DomainSwitch / CaptureStore）
-    api("io.github.openking88:netlab:1.0.1")
+    api("io.github.openking88:netlab:1.0.2")
 
     // Compose 全部走 compileOnly：库只在编译期需要它，运行期由宿主自己的 Compose 提供。
     // 这样 POM 里不会出现 Compose，既不抬宿主的版本，也不会给纯 View 宿主塞进整套 Compose。
@@ -62,7 +62,7 @@ dependencies {
 }
 
 group = "io.github.openking88"
-version = "1.0.1"
+version = "1.0.2"
 
 // ─────────── Maven Central 发布支持（与 core 同一套约定）───────────
 val netlabRepoUrl: String? = providers.gradleProperty("netlab.repo.url").orNull
@@ -86,7 +86,7 @@ afterEvaluate {
                 artifact(netlabJavadocJar)
                 groupId = "io.github.openking88"
                 artifactId = "netlab-ui"
-                version = "1.0.1"
+                version = "1.0.2"
                 pom {
                     name.set("netlab-ui")
                     description.set("netlab 的可视化面板：域名切换 + 抓包列表与详情")

@@ -40,6 +40,16 @@ internal object DomainSwitchLauncherEntry {
         }
     }
 
+    /**
+     * 强制收起入口。
+     *
+     * <p>面板不可用时（宿主没接 androidx.activity / Compose）调用：组件状态是**持久化**的，
+     * 而且可能在更早的版本里被打开过，不主动收掉就会残留一个"点了就崩"的桌面图标。
+     */
+    fun hide(context: Context) {
+        runCatching { setAliasEnabled(context, false) }
+    }
+
     private fun areNotificationsAvailable(context: Context): Boolean {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
             ?: return false
