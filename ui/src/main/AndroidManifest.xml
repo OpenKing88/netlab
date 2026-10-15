@@ -21,6 +21,30 @@
             android:exported="true"
             android:label="@string/domain_switch_panel_title"
             android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+
+        <!--
+          通知被禁用时的兜底入口（桌面图标）。
+
+          为什么需要：通知栏常驻入口是主入口，但 API 33+ 需要 POST_NOTIFICATIONS 运行时权限，
+          宿主没申请、或用户在系统里关掉通知时，通知**发不出来也不会报错**（库是静默降级），
+          结果就是面板彻底进不去，只能靠 adb。这里给一条不依赖任何权限的退路。
+
+          默认 enabled=false（不占桌面）。运行时由 DomainSwitchLauncherEntry 按需打开：
+            通知可用 → 保持隐藏；通知不可用 → 露出一个图标。
+          不想要这个行为：domainSwitch { launcherEntry.set(false) }
+        -->
+        <activity-alias
+            android:name="io.github.openking88.netlab.ui.DomainSwitchLauncherAlias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/domain_switch_icon"
+            android:label="@string/domain_switch_launcher_label"
+            android:targetActivity="io.github.openking88.netlab.ui.DomainSwitchPanelActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
     </application>
 
 </manifest>

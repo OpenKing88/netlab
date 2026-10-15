@@ -44,7 +44,7 @@ dependencies {
 
 // 本地验证用：发布到 mavenLocal，让插件能像消费真实制品一样自动注入依赖
 group = "io.github.openking88"
-version = "1.0.0"
+version = "1.0.1"
 
 // ─────────── Maven Central 发布支持 ───────────
 // 仓库地址与签名凭据一律从 gradle properties 读（本地 ~/.gradle/gradle.properties 或 CI 环境变量），
@@ -76,7 +76,7 @@ afterEvaluate {
                 artifact(netlabJavadocJar)
                 groupId = "io.github.openking88"
                 artifactId = "netlab"
-                version = "1.0.0"
+                version = "1.0.1"
                 pom {
                     name.set("netlab")
                     description.set("零代码接入的 Android 网络调试库：动态域名切换 + 网络抓包")

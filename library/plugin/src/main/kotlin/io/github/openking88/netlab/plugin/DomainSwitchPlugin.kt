@@ -119,6 +119,7 @@ class DomainSwitchPlugin : Plugin<Project> {
             captureEnabled.set(extension.capture.get())
             maxRecords.set(extension.maxRecords.get())
             maxBodyBytes.set(extension.maxBodyBytes.get())
+            launcherEntry.set(extension.launcherEntry.get())
             // KDoc 不会进字节码，只能在编译期从源码里捞
             apiSources.from(
                 project.fileTree(project.projectDir) {

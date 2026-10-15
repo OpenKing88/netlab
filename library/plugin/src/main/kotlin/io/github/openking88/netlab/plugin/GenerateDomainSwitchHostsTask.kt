@@ -35,6 +35,10 @@ abstract class GenerateDomainSwitchHostsTask : DefaultTask() {
     @get:Input
     abstract val maxBodyBytes: Property<Int>
 
+    /** 通知不可用时是否露出桌面兜底入口。 */
+    @get:Input
+    abstract val launcherEntry: Property<Boolean>
+
     /**
      * 参与接口说明提取的源码。
      *
@@ -68,7 +72,7 @@ abstract class GenerateDomainSwitchHostsTask : DefaultTask() {
             """
             <?xml version="1.0" encoding="utf-8"?>
             <resources>
-                <string name="domain_switch_hosts" translatable="false">$entries</string>
+                <string name="$HOSTS_RESOURCE" translatable="false">$entries</string>
             </resources>
             """.trimIndent()
         )
@@ -76,9 +80,10 @@ abstract class GenerateDomainSwitchHostsTask : DefaultTask() {
             """
             <?xml version="1.0" encoding="utf-8"?>
             <resources>
-                <string name="domain_switch_capture_enabled" translatable="false">${captureEnabled.get()}</string>
-                <string name="domain_switch_max_records" translatable="false">${maxRecords.get()}</string>
-                <string name="domain_switch_max_body_bytes" translatable="false">${maxBodyBytes.get()}</string>
+                <string name="$CAPTURE_ENABLED_RESOURCE" translatable="false">${captureEnabled.get()}</string>
+                <string name="$MAX_RECORDS_RESOURCE" translatable="false">${maxRecords.get()}</string>
+                <string name="$MAX_BODY_BYTES_RESOURCE" translatable="false">${maxBodyBytes.get()}</string>
+                <string name="$LAUNCHER_ENTRY_RESOURCE" translatable="false">${launcherEntry.get()}</string>
             </resources>
             """.trimIndent()
         )
@@ -88,10 +93,11 @@ abstract class GenerateDomainSwitchHostsTask : DefaultTask() {
             """
             <?xml version="1.0" encoding="utf-8"?>
             <resources>
-                <string name="domain_switch_api_descriptions" translatable="false">${escapeForResource(descriptions)}</string>
+                <string name="$API_DESCRIPTIONS_RESOURCE" translatable="false">${escapeForResource(descriptions)}</string>
             </resources>
             """.trimIndent()
         )
+        writeKeepRules()
         logger.lifecycle(
             "[netlab] 自动识别到域名：$links；" +
                     "capture=${captureEnabled.get()} maxRecords=${maxRecords.get()} " +
@@ -101,6 +107,30 @@ abstract class GenerateDomainSwitchHostsTask : DefaultTask() {
     }
 
     // ─────────────────── 接口说明提取 ───────────────────
+
+    /**
+     * 生成资源压缩保留清单。
+     *
+     * 为什么必须有：本任务生成的这几个字符串，库（预编译 AAR）拿不到宿主的 R 常量，
+     * 只能通过 `getIdentifier` 按**名字**反射读取。资源压缩器追踪不到静态引用，
+     * 会把它们当成死代码删掉 —— 现场表现是面板显示「没有识别到基线域名」，
+     * 而 debug 包（不压缩）一切正常，极难倒查到资源压缩上。
+     *
+     * AGP 8 时代偶尔能侥幸留住，AGP 9 新增的资源优化（optimizeReleaseResources）删得更彻底。
+     *
+     * ⚠️ 文件名刻意不叫 `keep.xml`：宿主自己往往也有一份 `res/raw/keep.xml`，
+     * 同名的 raw 资源会以宿主那份为准，我们的规则会被静默覆盖。
+     */
+    private fun writeKeepRules() {
+        val rawDirectory = outputDirectory.get().asFile.resolve("raw").apply { mkdirs() }
+        File(rawDirectory, KEEP_RESOURCE_FILE_NAME).writeText(
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <resources xmlns:tools="http://schemas.android.com/tools"
+                tools:keep="$KEEP_TARGETS" />
+            """.trimIndent()
+        )
+    }
 
     /**
      * 从源码里提取「接口全名#方法名 → 注释说明」。
@@ -253,6 +283,38 @@ abstract class GenerateDomainSwitchHostsTask : DefaultTask() {
         const val HOSTS_RESOURCE_FILE_NAME = "domain_switch_hosts.xml"
         const val CONFIG_RESOURCE_FILE_NAME = "domain_switch_config.xml"
         const val API_DESCRIPTIONS_RESOURCE_FILE_NAME = "domain_switch_api_descriptions.xml"
+
+        /**
+         * 资源压缩保留清单的文件名。
+         *
+         * ⚠️ 刻意不叫 `keep.xml`：宿主自己往往也有一份 `res/raw/keep.xml`，
+         * 同名的 raw 资源会以宿主那份为准，我们的规则会被静默覆盖。
+         */
+        const val KEEP_RESOURCE_FILE_NAME = "domain_switch_keep.xml"
+
+        // 资源名集中定义：XML 里声明的名字与下面保留清单共用同一批常量，
+        // 避免"以后改了名字忘了改清单"导致生产包上资源被删。
+        private const val HOSTS_RESOURCE = "domain_switch_hosts"
+        private const val CAPTURE_ENABLED_RESOURCE = "domain_switch_capture_enabled"
+        private const val MAX_RECORDS_RESOURCE = "domain_switch_max_records"
+        private const val MAX_BODY_BYTES_RESOURCE = "domain_switch_max_body_bytes"
+        private const val API_DESCRIPTIONS_RESOURCE = "domain_switch_api_descriptions"
+        private const val LAUNCHER_ENTRY_RESOURCE = "domain_switch_launcher_entry"
+
+        /**
+         * 需要保护的资源清单。
+         *
+         * 这几个资源都是库在运行期用 `getIdentifier` 按名字反射读取的，
+         * 资源压缩器看不到静态引用，会把它们当死代码删掉。
+         */
+        private val KEEP_TARGETS = listOf(
+            HOSTS_RESOURCE,
+            CAPTURE_ENABLED_RESOURCE,
+            MAX_RECORDS_RESOURCE,
+            MAX_BODY_BYTES_RESOURCE,
+            API_DESCRIPTIONS_RESOURCE,
+            LAUNCHER_ENTRY_RESOURCE,
+        ).joinToString(separator = ",") { "@string/$it" }
 
         private const val MAX_DESCRIPTION_LENGTH = 60
 

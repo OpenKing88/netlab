@@ -32,7 +32,7 @@ PUBLISHING_TYPE ?= USER_MANAGED
 NETLAB_SIGN_ENV = ORG_GRADLE_PROJECT_signingKey="$$(cat $(NETLAB_SECRETS)/signing.key)" ORG_GRADLE_PROJECT_signingPassword="$$(cat $(NETLAB_SECRETS)/signing.password)"
 NETLAB_TOKEN = $$(printf '%s:%s' "$$(cat $(NETLAB_SECRETS)/portal.user)" "$$(cat $(NETLAB_SECRETS)/portal.password)" | base64 | tr -d '\n')
 
-.PHONY: help check check-core check-ui check-hosts publish publish-core publish-ui \
+.PHONY: help check check-core check-ui check-hosts check-shrink publish publish-core publish-ui \
         bundle clean-bundle check-secrets upload status central-publish central-drop
 
 help:
@@ -40,6 +40,7 @@ help:
 	@echo "make check-core   核心：单测 + 产物契约门禁"
 	@echo "make check-ui     面板：lint + Compose 桥接门禁"
 	@echo "make check-hosts  AGP 8.13.2 宿主验证工程构建"
+	@echo "make check-shrink 资源压缩回归：minify+shrinkResources 下插件生成的资源是否存活"
 	@echo "make publish      把 core 与 ui 发布到 mavenLocal（供宿主验证）"
 	@echo "make bundle       构建 Maven Central 上传用的 bundle zip（需 $(NETLAB_SECRETS)）"
 	@echo "make upload       把 bundle 传给 Central Portal（默认 USER_MANAGED）"
@@ -57,6 +58,30 @@ check-ui:
 
 check-hosts:
 	cd test-hosts/agp8 && ./gradlew -Dorg.gradle.java.home=$(JAVA21) :probe:assembleDevTestDebug
+
+# 资源压缩回归。
+#
+# 插件生成的域名清单 / 配置 / 接口说明只能靠 getIdentifier 反射读取，
+# 压缩器看不到静态引用会把它们当死代码删掉（AGP 9 的新资源优化删得更彻底）。
+# 这个宿主刻意开着 isMinifyEnabled + isShrinkResources，用来验证插件自动生成的
+# res/raw/domain_switch_keep.xml 真的兜住了。
+check-shrink:
+	cd test-hosts/agp8 && ./gradlew -Dorg.gradle.java.home=$(JAVA21) :probe:assembleDevTestRelease
+	@set -e; \
+	sdk=$$(sed -n 's/^sdk.dir=//p' test-hosts/agp8/local.properties); \
+	aapt2=$$(ls -t "$$sdk"/build-tools/*/aapt2 2>/dev/null | head -1); \
+	apk=$$(ls -t test-hosts/agp8/probe/build/outputs/apk/devTest/release/*.apk | head -1); \
+	echo "检查 $$apk"; \
+	for n in domain_switch_hosts domain_switch_capture_enabled domain_switch_max_records \
+	         domain_switch_max_body_bytes domain_switch_api_descriptions \
+	         domain_switch_launcher_entry; do \
+	  if "$$aapt2" dump resources "$$apk" 2>/dev/null | grep -q "string/$$n"; then \
+	    echo "  ✅ $$n"; \
+	  else \
+	    echo "  ❌ $$n 被压缩删掉了 —— 检查插件是否生成了 res/raw/domain_switch_keep.xml"; exit 1; \
+	  fi; \
+	done; \
+	echo "[netlab] 资源压缩回归通过：反射读取的资源全部存活"
 
 publish: publish-core publish-ui
 

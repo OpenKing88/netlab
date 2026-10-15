@@ -13,7 +13,11 @@ import android.net.Uri
 class DomainSwitchUiInitProvider : ContentProvider() {
 
     override fun onCreate(): Boolean {
-        context?.let { DomainSwitchUiNotification.start(it) }
+        context?.let {
+            DomainSwitchUiNotification.start(it)
+            // 通知不可用时把桌面兜底入口亮出来（通知可用时自动收回）
+            DomainSwitchLauncherEntry.sync(it)
+        }
         return true
     }
 

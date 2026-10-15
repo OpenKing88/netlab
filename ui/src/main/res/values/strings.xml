@@ -5,4 +5,6 @@
     <string name="domain_switch_channel_description">域名切换与抓包入口</string>
     <string name="domain_switch_notification_title">最近请求</string>
     <string name="domain_switch_notification_text">还没有抓到请求，点此打开面板</string>
+    <!-- 通知被禁用时露出的桌面图标名。宿主可以在自己的 strings.xml 里覆盖它 -->
+    <string name="domain_switch_launcher_label">域名切换入口</string>
 </resources>

@@ -25,7 +25,7 @@ abstract class DomainSwitchExtension @Inject constructor(objects: ObjectFactory)
      * 宿主因此不需要手写任何 dependencies。
      */
     val runtimeDependency: Property<String> = objects.property(String::class.java)
-        .convention("io.github.openking88:netlab:1.0.0")
+        .convention("io.github.openking88:netlab:1.0.1")
 
     /** 是否由插件自动补充运行时依赖。关掉后需要宿主自己按渠道声明依赖。 */
     val autoAddDependency: Property<Boolean> = objects.property(Boolean::class.java)
@@ -42,10 +42,23 @@ abstract class DomainSwitchExtension @Inject constructor(objects: ObjectFactory)
 
     /** 面板制品坐标。 */
     val uiDependency: Property<String> = objects.property(String::class.java)
-        .convention("io.github.openking88:netlab-ui:1.0.0")
+        .convention("io.github.openking88:netlab-ui:1.0.1")
 
     /** 是否录制网络请求。关掉后抓包拦截器直接放行，零开销。 */
     val capture: Property<Boolean> = objects.property(Boolean::class.java)
+        .convention(true)
+
+    /**
+     * 通知被禁用时，是否露出桌面兜底入口（一个默认隐藏的 activity-alias）。
+     *
+     * <p>通知栏常驻入口是主入口，但 Android 13+ 需要 POST_NOTIFICATIONS 运行时权限；
+     * 宿主没申请或用户关掉通知时，通知发不出来也不会报错，结果就是面板彻底进不去。
+     * 打开这个开关后：通知不可用 → 桌面出现「域名切换入口」图标；通知恢复 → 自动收回，
+     * 不会长期占着桌面。
+     *
+     * <p>等于 false 时行为与旧版本一致（只能靠通知栏或 adb 进面板）。
+     */
+    val launcherEntry: Property<Boolean> = objects.property(Boolean::class.java)
         .convention(true)
 
     /** 内存与落库保留的最大记录条数。 */

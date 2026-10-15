@@ -128,7 +128,8 @@ domainSwitch {
 | **初判链路** | 按字段名归类：`BASE_URL` / 含 `API` → 网络请求；`URL_*` / 含 `WEB`、`H5` → WebView。运行期还会用实际观测纠正 |
 | **挂拦截器** | 在宿主的每个 `OkHttpClient` 上挂两个 application 拦截器：域名改写 + 抓包 |
 | **接管 WebView** | 改写 `loadUrl(...)` 的入参，覆盖 H5 页面加载 |
-| **挂入口** | 通知栏常驻入口，点开进面板 |
+| **挂入口** | 通知栏常驻入口，点开进面板；通知不可用时自动露出桌面兜底入口 |
+| **兜住资源压缩** | 生成 `res/raw/domain_switch_keep.xml`。域名清单 / 配置 / 接口说明只能靠 `getIdentifier` 反射读取，`shrinkResources` 会把它们当死代码删掉（AGP 9 的资源优化删得更彻底），表现是 release 包面板显示「没有识别到基线域名」而 debug 包正常 |
 
 ---
 
@@ -136,11 +137,22 @@ domainSwitch {
 
 ### 打开面板
 
-通知栏点一下即可。通知被禁用时可以用 adb：
+通知栏常驻入口点一下即可，通知上还顺带显示**最近 5 条请求**。三个入口按优先级：
+
+1. **通知栏**（主入口）—— 常驻，显示最近 5 条请求与状态码。
+2. **桌面图标**（兜底）—— 通知不可用时自动出现。
+   Android 13+ 的 `POST_NOTIFICATIONS` 是运行时权限，宿主没申请、或用户在系统里关掉了通知时，
+   通知**发不出来也不会报错**，主入口就没了。这时库会自动启用一个默认隐藏的桌面入口
+   （`DomainSwitchLauncherAlias`），通知恢复后自动收回，不长期占桌面。
+   不想要这个行为：`domainSwitch { launcherEntry.set(false) }`
+3. **adb**（保底）—— 任何时候都可用：
 
 ```bash
 adb shell am start -n <applicationId>/io.github.openking88.netlab.ui.DomainSwitchPanelActivity
 ```
+
+> 桌面兜底入口的图标与名称取自库的默认值（`domain_switch_icon` / `domain_switch_launcher_label`），
+> 宿主可以在自己的 `res/` 里用同名资源覆盖。
 
 ### 域名切换页
 
@@ -184,6 +196,7 @@ String rewritten = DomainSwitch.rewriteUrl("https://api.example.com/v1/user");
 | `maxRecords` | `Int` | `500` | 内存与落库保留的最大记录数 |
 | `maxBodyBytes` | `Int` | `524288` | 单条 body 捕获上限，超限只标记状态、不占内存 |
 | `includeUi` | `Boolean` | `true` | 是否带 Compose 面板；纯 View 宿主设为 `false` |
+| `launcherEntry` | `Boolean` | `true` | 通知被禁用时是否自动露出桌面兜底入口 |
 | `autoAddDependency` | `Boolean` | `true` | 是否由插件自动补依赖 |
 | `runtimeDependency` | `String` | `io.github.openking88:netlab:1.0.0` | 核心制品坐标 |
 | `uiDependency` | `String` | `io.github.openking88:netlab-ui:1.0.0` | 面板制品坐标 |

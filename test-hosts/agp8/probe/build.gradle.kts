@@ -24,6 +24,19 @@ android {
         buildConfig = true
     }
 
+    buildTypes {
+        release {
+            // ⚠️ 这两个开关必须开着，否则本宿主测不出最容易踩的那个坑：
+            // 插件生成的域名清单 / 配置 / 接口说明只能靠 getIdentifier 反射读取，
+            // 资源压缩器看不到静态引用，会把它们当死代码删掉 ——
+            // 现场表现是面板显示「没有识别到基线域名」，而 debug 包一切正常。
+            // 插件会自己生成 res/raw/domain_switch_keep.xml 来兜住，这里就是它的回归现场。
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+        }
+    }
+
     flavorDimensions += "env"
     productFlavors {
         create("devTest") {

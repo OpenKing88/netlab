@@ -5,6 +5,37 @@
 
 ## [未发布]
 
+## [1.0.1] - 2026-10-15
+
+### 修复
+
+- **`shrinkResources` 会把插件生成的资源删掉，导致 release 包面板显示「没有识别到基线域名」**。
+  域名清单 / 配置 / 接口说明这几个字符串是插件在编译期生成的，库（预编译 AAR）拿不到宿主的
+  R 常量，只能通过 `getIdentifier` 按名字反射读取；资源压缩器看不到静态引用，就把它们当死代码删掉。
+  AGP 8 时代偶尔能侥幸留住，**AGP 9 新增的资源优化（`optimizeReleaseResources`）删得更彻底**，
+  于是同一个 APK 在 debug 包正常、release 包能力全失，且现场没有任何报错，极难倒查。
+
+  现在插件会在生成这些资源的同时，额外生成一份 `res/raw/domain_switch_keep.xml` 保留清单，
+  宿主不需要自己写 `tools:keep`。文件名刻意不叫 `keep.xml`，避免与宿主自己的
+  `res/raw/keep.xml` 撞名导致规则被静默覆盖。
+
+- 插件模块发布时两个 publication 共用同一个 javadoc jar，两个 Sign 任务写同一个 `.asc`
+  路径导致 Gradle 判定隐式依赖冲突、发布失败（仅在开启签名时暴露）。
+
+### 新增
+
+- **通知不可用时的桌面兜底入口**：通知栏是主入口，但 Android 13+ 需要
+  `POST_NOTIFICATIONS` 运行时权限；宿主没申请或用户关掉通知时，通知既发不出去也不报错，
+  面板就彻底进不去了。现在库会在通知不可用时自动启用一个默认隐藏的桌面入口
+  （`DomainSwitchLauncherAlias`），通知恢复后自动收回。
+  新 DSL：`domainSwitch { launcherEntry.set(false) }` 可关掉该行为。
+
+### 质量门禁
+
+- 新增 `make check-shrink`：在开着 `isMinifyEnabled + isShrinkResources` 的宿主上构建 release，
+  逐个核对 6 个反射读取的资源是否存活。测试宿主（`test-hosts/agp8/probe`）也相应开启了
+  压缩配置，否则这个回归永远测不出来。
+
 ## [1.0.0] - 2026-10-08
 
 首个公开版本，发布到 Maven Central。
@@ -37,5 +68,6 @@
 - 生产渠道不支持（这正是设计前提）。
 - 切换 WebView 域名可能影响登录态。
 
-[未发布]: https://github.com/OpenKing88/netlab/compare/v1.0.0...HEAD
+[未发布]: https://github.com/OpenKing88/netlab/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/OpenKing88/netlab/releases/tag/v1.0.1
 [1.0.0]: https://github.com/OpenKing88/netlab/releases/tag/v1.0.0
